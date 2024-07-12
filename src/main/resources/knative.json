@@ -1,0 +1,17 @@
+{
+  "resources": [
+    {
+      "name": "default",
+      "type": "event",
+      "endpointKind": "sink",
+      "url": "{{k.sink:}}",
+      "objectApiVersion": "eventing.knative.dev/v1",
+      "objectKind": "Broker",
+      "objectName": "default",
+      "ceOverrides": {
+        "ce-type": "{{kn.connector.source.ce.type}}",
+        "ce-source": "{{kn.connector.source.ce.source}}"
+      }
+    }
+  ]
+}
