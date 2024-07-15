@@ -4,13 +4,14 @@
       "name": "default",
       "type": "event",
       "endpointKind": "sink",
-      "url": "{{k.sink:}}",
+      "url": "{{k.sink:http://localhost:8080}}",
       "objectApiVersion": "eventing.knative.dev/v1",
       "objectKind": "Broker",
       "objectName": "default",
       "ceOverrides": {
-        "ce-type": "{{kn.connector.source.ce.type}}",
-        "ce-source": "{{kn.connector.source.ce.source}}"
+        "ce-type": "dev.knative.connector.event.timer",
+        "ce-source": "dev.knative.eventing.timer-source",
+        "ce-subject": "timer-source"
       }
     }
   ]

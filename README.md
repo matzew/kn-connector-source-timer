@@ -59,7 +59,7 @@ You can deploy the application to Kubernetes with:
 ./mvnw package -Dquarkus.kubernetes.deploy=true
 ```
 
-This connects to the current Kubernetes cluster that you are connected with (e.g. via `kubectl`).
+This connects to the current Kubernetes cluster that you are connected with (e.g. via `kubectl config set-context --current --namespace $1`).
 
 You may change the target namespace with `-Dquarkus.kubernetes.namespace=my-namesapce`.
 
