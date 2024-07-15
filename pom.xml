@@ -62,7 +62,7 @@
         <!-- Kubernetes extension -->
         <dependency>
             <groupId>io.quarkus</groupId>
-            <artifactId>quarkus-container-image-jib</artifactId>
+            <artifactId>quarkus-container-image-buildpack</artifactId>
         </dependency>
         <dependency>
             <groupId>io.quarkus</groupId>
