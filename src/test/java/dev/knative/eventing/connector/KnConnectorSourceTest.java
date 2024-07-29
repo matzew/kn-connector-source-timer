@@ -33,7 +33,7 @@ import static org.citrusframework.http.actions.HttpActionBuilder.http;
 public class KnConnectorSourceTest {
 
     @CitrusResource
-    private GherkinTestActionRunner testcase;
+    private GherkinTestActionRunner tc;
 
     @BindToRegistry
     public HttpServer knativeBroker = HttpEndpoints.http()
@@ -44,7 +44,7 @@ public class KnConnectorSourceTest {
 
     @Test
     public void shouldProduceEvents() {
-        testcase.when(
+        tc.when(
             http().server(knativeBroker)
                     .receive()
                     .post()
@@ -55,7 +55,7 @@ public class KnConnectorSourceTest {
                     .header("ce-subject", "timer-source")
         );
 
-        testcase.then(
+        tc.then(
             http().server(knativeBroker)
                     .send()
                     .response(HttpStatus.OK)

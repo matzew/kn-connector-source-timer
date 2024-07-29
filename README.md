@@ -1,13 +1,13 @@
 # Knative connector timer-source
 
-Knative eventing connector based on Apache Camel Kamelets
+Knative eventing connector based on [Apache Camel Kamelets](https://camel.apache.org/camel-kamelets/).
 
 ## Kamelet source pipe
 
-The connector uses a Apache Camel Pipe to connect a Kamelet source with the Knative broker.
-The pipe is a YAML file located in [src/main/resources/camel/kn-connector-source-timer.yaml](src/main/resources/camel/kn-connector-source-timer.yaml)
+The connector uses an Apache Camel Pipe resource and connects a Kamelet source with the Knative broker.
+The Pipe is a YAML file located in [src/main/resources/camel/kn-connector-source-timer.yaml](src/main/resources/camel/kn-connector-source-timer.yaml)
 
-This connector uses the [timer-source Kamelet](https://camel.apache.org/camel-kamelets/timer-source.html) and produces events for the Knative broker. 
+This connector uses the [timer-source Kamelet](https://camel.apache.org/camel-kamelets/timer-source.html) that produces events for the Knative broker. 
 
 ## Build the container image
 
@@ -27,7 +27,7 @@ quay.io/openshift-knative/kn-connector-source-timer:1.0-SNAPSHOT
 ## Kubernetes manifest
 
 The build produces a Kubernetes manifest in (`target/kubernetes/kubernetes.yml`).
-This manifest holds all resources required to run the application on your Kubenretes cluster.
+This manifest holds all resources required to run the application on your Kubernetes cluster.
 
 The Kubernetes manifest includes:
 
@@ -63,41 +63,55 @@ This connects to the current Kubernetes cluster that you are connected with (e.g
 
 You may change the target namespace with `-Dquarkus.kubernetes.namespace=my-namesapce`.
 
+## Kamelet source properties
+
+The source Kamelet defines a set of properties.
+
+You can customize the properties via environment variables on the deployment:
+
+* CAMEL_KAMELET_TIMER_SOURCE_MESSAGE=Hello
+* CAMEL_KAMELET_TIMER_SOURCE_PERIOD=1000
+
+You can set the environment variable on the running deployment:
+
+```shell
+kubectl set env deployment/kn-connector-source-timer CAMEL_KAMELET_TIMER_SOURCE_MESSAGE="I updated it..."
+```
+
+The environment variables that overwrite properties on the Kamelet source follow a naming convention:
+
+* CAMEL_KAMELET_{{NAME}}_{{ANY_PROPERTY_NAME}}
+
+The name represents the name of the Kamelet source.
+
+You may also mount a configmap/secret with some `application.properties`:
+
+_application.properties_
+```properties
+# Kamelet timer-source defined properties
+camel.kamelet.timer-source.message=Knative rocks!
+camel.kamelet.timer-source.period=2000
+camel.kamelet.timer-source.contentType=application/json
+camel.kamelet.timer-source.repeatCount=5
+
+# any other Kamelet source property
+camel.kamelet.timer-source.any-other-prop=value
+```
+
 ## CloudEvent attributes
 
 The connector produces a set of CloudEvent attributes with default values:
 
 * ce-type: dev.knative.connector.event.timer
 * ce-source: dev.knative.eventing.timer-source
-
-## Kamelet source properties
-
-The source Kamelet defines a set of properties.
-You can customize the properties via environment variables on the deployment:
-
-* KN_CONNECTOR_SOURCE_TIMER_MESSAGE
-* KN_CONNECTOR_SOURCE_TIMER_PERIOD
-
-As an alternative to that you may mount a configmap/secret with some `application.properties`:
-
-_application.properties_
-```properties
-# connector defined source properties
-kn.connector.source.timer.message=Knative rocks!
-kn.connector.source.timer.period=2000
-
-# any other Kamelet source property
-camel.kamelet.timer-source.contentType=application/json
-camel.kamelet.timer-source.repeatCount=5
-camel.kamelet.timer-source.any-other-prop=value
-```
+* ce-subject: timer-source
 
 ## Dependencies
 
 The required Camel dependencies need to be added to the Maven POM before building and deploying. 
 You can use one of the Kamelets available in the [Kamelet catalog](https://camel.apache.org/camel-kamelets/) as a source or sink in this connector.
 
-Typically the Kamelet is backed by a Quarkus Camel extension component dependency that needs to be added to the Maven POM.
+Typically, the Kamelet is backed by a Quarkus Camel extension component dependency that needs to be added to the Maven POM.
 The Kamelets in use may list additional dependencies that we need to include in the Maven POM.
 
 ## Custom Kamelets
