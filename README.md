@@ -155,21 +155,117 @@ The environment variables that overwrite properties on the Kamelet source follow
 
 The name represents the name of the Kamelet source as defined in the [Kamelet catalog](https://camel.apache.org/camel-kamelets/).
 
-### ConfigMap and secrets
+### ConfigMap and Secret
 
-You may also mount a configmap/secret with some `application.properties`:
+You may also mount a configmap/secret to overwrite Kamelet properties with values from the configmap/secret resource.
 
-_application.properties_
+Given a configmap named `my-source-config` in Kubernetes that has two entries:
+
 ```properties
-# Kamelet timer-source defined properties
-camel.kamelet.timer-source.message=Knative rocks!
-camel.kamelet.timer-source.period=2000
-camel.kamelet.timer-source.contentType=application/json
-camel.kamelet.timer-source.repeatCount=5
-
-# any other Kamelet source property
-camel.kamelet.timer-source.any-other-prop=value
+message = Knative rocks!
+period = 3000
 ```
+
+You can reference the values of the configmap in the environment variables like this:
+
+* CAMEL_KAMELET_TIMER_SOURCE_MESSAGE={{configmap:my-source-config/message}}
+* CAMEL_KAMELET_TIMER_SOURCE_PERIOD={{configmap:my-source-config/period}}
+
+The configmap property values follow this general syntax:
+
+```text
+configmap:name/key[:defaultValue]
+```
+
+This means you can also set a default value in case the configmap should not be present.
+
+```text
+configmap:timer-source-config/period:5000
+```
+
+You can set the environment variables on the Kubernetes deployment for the connector:
+
+```yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: timer-source
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: timer-source
+      app.kubernetes.io/version: 1.0-SNAPSHOT
+  template:
+    spec:
+      containers:
+        - image: localhost:5001/cdeppisc/timer-source:1.0-SNAPSHOT
+          imagePullPolicy: Always
+          name: timer-source
+          env:
+            - name: CAMEL_KAMELET_TIMER_SOURCE_MESSAGE
+              value: "{{configmap:my-source-config/message}}"
+            - name: CAMEL_KAMELET_TIMER_SOURCE_PERIOD
+              value: "{{configmap:my-source-config/period:1000}}"
+```
+
+In order to use the values from the configmap you need to add a volume and a volume mount to the deployment.
+
+```yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: timer-source
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: timer-source
+      app.kubernetes.io/version: 1.0-SNAPSHOT
+  template:
+    spec:
+      containers:
+        - image: localhost:5001/cdeppisc/timer-source:1.0-SNAPSHOT
+          imagePullPolicy: Always
+          name: timer-source
+          env:
+            - name: CAMEL_KAMELET_TIMER_SOURCE_MESSAGE
+              value: "{{configmap:my-source-config/message}}"
+            - name: CAMEL_KAMELET_TIMER_SOURCE_PERIOD
+              value: "{{configmap:my-source-config/period:1000}}"
+          volumeMounts:
+            - mountPath: /etc/camel/conf.d/_configmaps/my-source-config
+              name: timer-source-config
+              readOnly: true
+      volumes:
+        - configMap:
+            name: my-source-config
+          name: timer-source-config
+```
+
+Camel is able to resolve the configmap mount path given in the volume mount.
+The mount path is configurable via `application.properties` in the connector project:
+
+* camel.kubernetes-config.mount-path-configmaps=/etc/camel/conf.d/_configmaps/my-source-config
+* camel.kubernetes-config.mount-path-secrets=/etc/camel/conf.d/_secrets/my-source-config
+
+The mount path configured on the Kubernetes deployment should match the configuration in the `application.properties`.
+
+Instead of settings the mount paths statically in the `application.properties` you can also set these via environment variables on the
+Kubernetes deployment.
+
+* CAMEL_K_MOUNT_PATH_CONFIGMAPS=/etc/camel/conf.d/_configmaps/my-source-config
+* CAMEL_K_MOUNT_PATH_SECRETS=/etc/camel/conf.d/_secrets/my-source-config
+
+The same mechanism applies to mounting and configuring Kubernetes secrets.
+The syntax for referencing a secret value in an environment variable is as follows:
+
+```text
+secret:name/key[:defaultValue]
+```
+
+This means you can overwrite Kamelet properties with the values from the secret like this:
+
+* CAMEL_KAMELET_TIMER_SOURCE_MESSAGE=secret:source-config/msg
+* CAMEL_KAMELET_TIMER_SOURCE_PERIOD=secret:source-config/period
 
 ## CloudEvent attributes
 
